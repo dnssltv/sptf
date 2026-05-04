@@ -1,5 +1,6 @@
 import threading
 import traceback
+import sys
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox
@@ -37,6 +38,7 @@ class SpotifyImporterGUI(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Spotify Importer")
+        self._try_set_window_icon()
         self.geometry("1040x760")
         self.minsize(960, 700)
         self.configure(fg_color=SPOTIFY_BG)
@@ -71,6 +73,22 @@ class SpotifyImporterGUI(ctk.CTk):
 
         self._build_ui()
         self._show_step(0)
+
+
+    def _try_set_window_icon(self) -> None:
+        base_path = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+        icon_path = base_path / "spotify.ico"
+        if not icon_path.exists():
+            self._write_debug_line(f"[UI] Иконка не загружена: файл не найден ({icon_path})")
+            return
+
+        try:
+            self.iconbitmap(default=str(icon_path))
+        except Exception:
+            try:
+                self.wm_iconbitmap(str(icon_path))
+            except Exception as exc:
+                self._write_debug_line(f"[UI] Иконка не загружена: {exc}")
 
     def _build_ui(self) -> None:
         self.grid_columnconfigure(0, weight=1)
