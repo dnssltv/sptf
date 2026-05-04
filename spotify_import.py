@@ -491,6 +491,7 @@ def import_tracks(
         added: int,
         not_found_count: int,
         cancelled: bool = False,
+        track: str = "",
     ) -> None:
         if on_progress is None:
             return
@@ -501,6 +502,7 @@ def import_tracks(
                 "added": added,
                 "not_found": not_found_count,
                 "cancelled": cancelled,
+                "track": track,
             }
         )
 
@@ -675,7 +677,7 @@ def import_tracks(
                 log(f"[{idx}/{total_tracks}] ОШИБКА: {track.raw} ({type(exc).__name__})")
             processed_count = idx
             save_state()
-            emit_progress(processed_count, total_tracks, added_count, len(not_found), cancelled=cancelled)
+            emit_progress(processed_count, total_tracks, added_count, len(not_found), cancelled=cancelled, track=track.raw)
             continue
         if uri:
             pending_uris.append(uri)
@@ -708,7 +710,7 @@ def import_tracks(
             pending_uris.clear()
 
         save_state()
-        emit_progress(processed_count, total_tracks, added_count, len(not_found), cancelled=cancelled)
+        emit_progress(processed_count, total_tracks, added_count, len(not_found), cancelled=cancelled, track=track.raw)
 
     if pending_uris:
         try:
