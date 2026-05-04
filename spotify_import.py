@@ -316,6 +316,25 @@ def _create_playlist_with_fallback(
     public: bool,
     log: Callable[[str], None],
 ) -> Dict:
+    if not user_id:
+        raise RuntimeError(
+            "Не удалось определить user_id Spotify для создания плейлиста. "
+            "Повторите вход в аккаунт и попробуйте снова."
+        )
+
+    me = _call_with_retry(sp.current_user, stage="Get current user profile")
+    current_user_id = str((me or {}).get("id") or "")
+    if not current_user_id:
+        raise RuntimeError(
+            "Spotify не вернул идентификатор пользователя. "
+            "Повторите авторизацию и проверьте доступ приложения."
+        )
+    if current_user_id != user_id:
+        raise RuntimeError(
+            "Идентификатор авторизованного пользователя не совпадает с ожидаемым. "
+            "Выйдите из Spotify в приложении и авторизуйтесь нужным аккаунтом."
+        )
+
     try:
         return _call_with_retry(
             lambda: sp.user_playlist_create(
@@ -327,20 +346,19 @@ def _create_playlist_with_fallback(
             stage="Create playlist",
         )
     except RuntimeError as exc:
-        if "Spotify API error (403)" not in str(exc):
-            raise
-        log("Create playlist via /users/{id}/playlists was forbidden. Retrying via /me/playlists...")
-        return _call_with_retry(
-            lambda: sp._post(
-                "me/playlists",
-                payload={
-                    "name": playlist_name,
-                    "public": public,
-                    "description": "Imported from text file",
-                },
-            ),
-            stage="Create playlist",
-        )
+        if "Spotify API error (403)" in str(exc):
+            log(
+                "Spotify запретил создание плейлиста для текущего аккаунта. "
+                "Обычно это связано с правами доступа или ограничениями аккаунта."
+            )
+            raise RuntimeError(
+                "Spotify вернул 403 при создании плейлиста. "
+                "Проверьте: 1) вы вошли в нужный аккаунт; "
+                "2) приложение получило необходимые scopes (playlist-modify-public и/или "
+                "playlist-modify-private); 3) у аккаунта нет ограничений по типу подписки "
+                "или региону. Затем выполните повторную авторизацию и попробуйте снова."
+            ) from exc
+        raise
     except Exception as exc:
         raise RuntimeError(f"Create playlist failed.\n{exc!r}") from exc
 
