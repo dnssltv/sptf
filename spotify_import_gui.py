@@ -17,15 +17,17 @@ from spotify_import import (
     read_tracks,
 )
 from yandex_music_utils import fetch_playlist_tracks_from_url, save_tracks_txt
+from ui_tokens import TOKENS
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
 
-SPOTIFY_BG = "#121212"
-SPOTIFY_CARD = "#181818"
-SPOTIFY_TEXT = "#FFFFFF"
-SPOTIFY_SUBTLE = "#B3B3B3"
-SPOTIFY_GREEN = "#1DB954"
+C = TOKENS["color"]
+SPOTIFY_BG = C["bg_main"]
+SPOTIFY_CARD = C["bg_card"]
+SPOTIFY_TEXT = C["text_main"]
+SPOTIFY_SUBTLE = C["text_secondary"]
+SPOTIFY_GREEN = C["primary"]
 
 
 def _safe_filename(text: str) -> str:
@@ -259,9 +261,11 @@ class SpotifyImporterGUI(ctk.CTk):
         self.progress.grid(row=1, column=0, sticky="ew", pady=(8, 4))
         self.progress.set(0)
         ctk.CTkLabel(frame, textvariable=self.progress_label_var, text_color=SPOTIFY_SUBTLE).grid(row=2, column=0, sticky="w")
+        self.current_track_var = ctk.StringVar(value="Текущий трек: —")
+        ctk.CTkLabel(frame, textvariable=self.current_track_var, text_color=SPOTIFY_TEXT).grid(row=3, column=0, sticky="w", pady=(4, 0))
 
         control = ctk.CTkFrame(frame, fg_color="transparent")
-        control.grid(row=3, column=0, sticky="w", pady=(10, 8))
+        control.grid(row=4, column=0, sticky="w", pady=(10, 8))
         self.start_btn = ctk.CTkButton(control, text="Старт", command=lambda: self._start_import(resume=False), fg_color=SPOTIFY_GREEN, text_color="#000000")
         self.start_btn.pack(side="left")
         self.resume_btn = ctk.CTkButton(control, text="Продолжить после сбоя", command=lambda: self._start_import(resume=True), fg_color="#2a2a2a")
@@ -271,9 +275,9 @@ class SpotifyImporterGUI(ctk.CTk):
         self.cancel_btn = ctk.CTkButton(control, text="Остановить", command=self._cancel_import, state="disabled", fg_color="#2a2a2a")
         self.cancel_btn.pack(side="left", padx=(8, 0))
 
-        self.log_box = ctk.CTkTextbox(frame, fg_color="#101010", text_color=SPOTIFY_TEXT, height=180)
-        self.log_box.grid(row=4, column=0, sticky="nsew", pady=(6, 0))
-        frame.grid_rowconfigure(4, weight=0)
+        self.log_box = ctk.CTkTextbox(frame, fg_color=C["console_bg"], text_color=SPOTIFY_TEXT, height=180)
+        self.log_box.grid(row=5, column=0, sticky="nsew", pady=(6, 0))
+        frame.grid_rowconfigure(5, weight=0)
 
     def _show_step(self, idx: int) -> None:
         self.current_step = idx
@@ -512,6 +516,8 @@ class SpotifyImporterGUI(ctk.CTk):
             pct = 0 if total <= 0 else int((processed / total) * 100)
             self.after(0, lambda p=pct: self.progress_var.set(p / 100.0))
             self.after(0, lambda p=pct, pr=processed, tt=total: self.progress_label_var.set(f"{p}% ({pr}/{tt})"))
+            track = data.get("track") or "—"
+            self.after(0, lambda t=track: self.current_track_var.set(f"Текущий трек: {t}"))
 
         def worker() -> None:
             try:

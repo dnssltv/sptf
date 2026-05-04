@@ -1,0 +1,20 @@
+TOKENS = {
+    "color": {
+        "bg_main": "#121212",
+        "bg_card": "#181818",
+        "bg_hover": "#282828",
+        "primary": "#1DB954",
+        "primary_hover": "#1ed760",
+        "primary_active": "#169c46",
+        "text_main": "#FFFFFF",
+        "text_secondary": "#B3B3B3",
+        "text_muted": "#6A6A6A",
+        "error": "#E22134",
+        "warning": "#F59E0B",
+        "success": "#1DB954",
+        "border": "#2A2A2A",
+        "console_bg": "#0D0D0D",
+    },
+    "radius": {"sm": 8, "md": 12, "lg": 16},
+    "space": {"xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 32},
+}
