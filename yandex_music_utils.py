@@ -11,7 +11,11 @@ PLAYLIST_URL_RE = re.compile(r"/users/([^/]+)/playlists/(\d+)")
 
 def _extract_owner_and_kind(url: str) -> Tuple[str, str]:
     parsed = urlparse(url)
-    if not parsed.netloc or "music.yandex" not in parsed.netloc:
+    netloc = parsed.netloc.lower()
+    # Strict host whitelist prevents accepting look-alike/attacker-controlled domains
+    # that merely contain "music.yandex" as a substring.
+    allowed_hosts = {"music.yandex.ru", "music.yandex.com"}
+    if netloc not in allowed_hosts:
         raise ValueError("Invalid Yandex Music URL.")
     match = PLAYLIST_URL_RE.search(parsed.path)
     if not match:
